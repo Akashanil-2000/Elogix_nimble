@@ -1,4 +1,5 @@
 import 'package:elogix_nimble/controller/service_detail_controller.dart';
+import 'package:elogix_nimble/screens/delivery_confirmation_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -291,6 +292,7 @@ class ServiceDetailPage extends StatelessWidget {
                     borderRadius: 12,
                     icon: const Icon(Icons.check_circle, color: Colors.white),
                   );
+                  Get.to(() => DeliveryConfirmationPage(serviceId: serviceId));
                 },
                 child: const Text(
                   'DELIVERED',
