@@ -62,9 +62,10 @@ class DashboardPage extends StatelessWidget {
               ),
 
               /// 🔹 FOOTER SECTION
-              _sectionWrapper(
-                child: FooterSection(footer: controller.footer.value!),
-              ),
+              if (controller.footer.value != null)
+                _sectionWrapper(
+                  child: FooterSection(footer: controller.footer.value!),
+                ),
             ],
           ),
         );

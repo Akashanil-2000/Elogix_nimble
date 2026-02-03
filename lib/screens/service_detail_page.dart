@@ -312,7 +312,20 @@ class ServiceDetailPage extends StatelessWidget {
   // ───────────────── FAILURE DIALOG ─────────────────
 
   void _showFailureDialog() {
-    final reasonCtrl = TextEditingController();
+    final RxString selectedReason = ''.obs;
+
+    final List<String> failureReasons = [
+      'Bad Address',
+      'Wrong Address',
+      'Wrong Number',
+      'Need Contact Name',
+      'Need Department Detail',
+      'Need Contact Number',
+      'Area/Location Changed',
+      'Change Of Address',
+      'Customer Requested for Call Back',
+      'COD Amount not ready',
+    ];
 
     Get.dialog(
       AlertDialog(
@@ -320,29 +333,53 @@ class ServiceDetailPage extends StatelessWidget {
           'Mark as Failed',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: TextField(
-          controller: reasonCtrl,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'Enter failure reason',
-            border: OutlineInputBorder(),
+        content: Obx(
+          () => DropdownButtonFormField<String>(
+            isExpanded: true, // ✅ VERY IMPORTANT
+            value: selectedReason.value.isEmpty ? null : selectedReason.value,
+            items:
+                failureReasons.map((reason) {
+                  return DropdownMenuItem<String>(
+                    value: reason,
+                    child: Text(
+                      reason,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+            onChanged: (value) {
+              selectedReason.value = value ?? '';
+            },
+            decoration: const InputDecoration(
+              labelText: 'Select failure reason',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 14,
+              ),
+            ),
           ),
         ),
+
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
-              if (reasonCtrl.text.trim().isEmpty) {
+              if (selectedReason.value.isEmpty) {
                 Get.snackbar(
                   'Error',
-                  'Please enter a reason',
+                  'Please select a failure reason',
                   snackPosition: SnackPosition.BOTTOM,
                 );
                 return;
               }
 
               Get.back();
+
+              // 🚀 API call will go here
+              // controller.markFailed(serviceId, selectedReason.value);
 
               Get.snackbar(
                 'Failed',
@@ -355,7 +392,10 @@ class ServiceDetailPage extends StatelessWidget {
                 icon: const Icon(Icons.error, color: Colors.white),
               );
             },
-            child: const Text('Submit'),
+            child: const Text(
+              'Submit',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

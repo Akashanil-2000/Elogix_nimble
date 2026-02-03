@@ -7,8 +7,8 @@ class ServiceListService {
     final token = await SessionStorage.getToken();
 
     final request = http.Request(
-      'GET',
-      Uri.parse('https://nimble.elogix-ti.me/api/v1/service_list'),
+      'POST',
+      Uri.parse('https://nimble.elogix-ti.me/api/v1/service/list'),
     );
 
     request.headers.addAll({
@@ -20,6 +20,7 @@ class ServiceListService {
 
     final response = await request.send();
     final body = await response.stream.bytesToString();
+    print('RAW RESPONSE: $body'); // 👈 ADD THIS
     final decoded = jsonDecode(body);
 
     if (decoded['status'] != 'success') {

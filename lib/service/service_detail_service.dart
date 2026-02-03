@@ -8,7 +8,7 @@ class ServiceDetailService {
 
     final request = http.Request(
       'GET',
-      Uri.parse('https://nimble.elogix-ti.me/api/v1/service'),
+      Uri.parse('https://nimble.elogix-ti.me/api/v1/service/$id'),
     );
 
     request.headers.addAll({
@@ -16,17 +16,18 @@ class ServiceDetailService {
       'X-Nimble-Authorization': token ?? '',
     });
 
-    request.body = jsonEncode({"id": id});
-
     final response = await request.send();
     final body = await response.stream.bytesToString();
+
+    print('DETAIL RAW: $body'); // debug
+
     final decoded = jsonDecode(body);
 
     if (decoded['status'] != 'success') {
       throw decoded['message'] ?? 'Failed to load service details';
     }
 
-    // API returns list → take first item
-    return decoded['data'][0] as Map<String, dynamic>;
+    // ✅ NOW DIRECT MAP
+    return decoded['data'] as Map<String, dynamic>;
   }
 }

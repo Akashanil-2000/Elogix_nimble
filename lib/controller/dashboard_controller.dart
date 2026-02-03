@@ -30,9 +30,12 @@ class DashboardController extends GetxController {
 
       final data = await _service.fetchDashboard();
 
-      kpiList.assignAll(data['kpi']['kpi_list'] ?? []);
-      metricsList.assignAll(data['metrics']['metrics_list'] ?? []);
-      footer.value = data['footer'];
+      // 🔹 SAFE ACCESS
+      kpiList.assignAll((data['kpi']?['kpi_list'] as List?) ?? []);
+
+      metricsList.assignAll((data['metrics']?['metrics_list'] as List?) ?? []);
+
+      footer.value = data['footer']; // already fine
     } catch (e) {
       Get.snackbar('Error', e.toString());
     } finally {
