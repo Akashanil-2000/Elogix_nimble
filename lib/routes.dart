@@ -1,6 +1,7 @@
 // lib/routes.dart
 import 'package:elogix_nimble/screens/dashboard_page.dart';
 import 'package:elogix_nimble/screens/login_page.dart';
+import 'package:elogix_nimble/screens/profile_page.dart';
 import 'package:elogix_nimble/screens/service_list_page.dart';
 import 'package:get/get.dart';
 
@@ -16,5 +17,6 @@ class AppRoutes {
       name: '/deliveries',
       page: () => const ServiceListPage(serviceType: 'delivery'),
     ),
+    GetPage(name: '/profile', page: () => ProfilePage()),
   ];
 }

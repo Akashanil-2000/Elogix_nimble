@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:elogix_nimble/service/delivery_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -169,41 +171,60 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
 
   // ───────────────── SUBMIT ─────────────────
 
-  void _submit() {
-    if (awbNumber == null) {
-      _showError('Please scan AWB number');
-      return;
+  void _submit() async {
+    try {
+      print('SUBMIT CLICKED');
+
+      if (awbNumber == null) {
+        print('AWB MISSING');
+        return _showError('Please scan AWB number');
+      }
+
+      if (receiverCtrl.text.trim().isEmpty) {
+        print('RECEIVER EMPTY');
+        return _showError('Receiver name is required');
+      }
+
+      if (amountCtrl.text.trim().isEmpty) {
+        print('AMOUNT EMPTY');
+        return _showError('Amount is required');
+      }
+
+      if (images.isEmpty) {
+        print('NO IMAGES');
+        return _showError('Please upload at least one image');
+      }
+
+      print('VALIDATION PASSED');
+
+      final base64Image = await _fileToBase64(images.first);
+      print('BASE64 LENGTH: ${base64Image.length}');
+
+      final payload = {
+        "receiver_name": receiverCtrl.text.trim(),
+        "receiver_relation": "Self",
+        "amount_received": double.parse(amountCtrl.text),
+        "proof_of_delivery": base64Image,
+        "signature": "",
+        "filename": "pod.jpg",
+        "delivery_notes": "Delivered via app",
+      };
+
+      print('PAYLOAD: $payload');
+
+      await DeliveryService().confirmDelivery(
+        serviceId: widget.serviceId,
+        payload: payload,
+      );
+
+      print('API SUCCESS');
+
+      Get.back();
+      Get.snackbar('Success', 'Delivery confirmed');
+    } catch (e) {
+      print('SUBMIT ERROR: $e');
+      _showError(e.toString());
     }
-
-    if (receiverCtrl.text.trim().isEmpty) {
-      _showError('Receiver name is required');
-      return;
-    }
-
-    if (amountCtrl.text.trim().isEmpty) {
-      _showError('Amount is required');
-      return;
-    }
-
-    if (images.isEmpty) {
-      _showError('Please upload at least one image');
-      return;
-    }
-
-    // 🚀 API integration will go here
-
-    Get.back();
-
-    Get.snackbar(
-      'Success',
-      'Delivery confirmed successfully',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      icon: const Icon(Icons.check_circle, color: Colors.white),
-    );
   }
 
   void _showError(String msg) {
@@ -410,5 +431,10 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
         ),
       ],
     );
+  }
+
+  Future<String> _fileToBase64(File file) async {
+    final bytes = await file.readAsBytes();
+    return base64Encode(bytes);
   }
 }

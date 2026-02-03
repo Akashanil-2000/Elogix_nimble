@@ -87,7 +87,11 @@ class ServiceDetailPage extends StatelessWidget {
       }),
 
       /// 🔹 ACTION BUTTONS
-      bottomNavigationBar: _actionButtons(context),
+      bottomNavigationBar: Obx(() {
+        final data = controller.detail.value;
+        if (data == null) return const SizedBox.shrink();
+        return _actionButtons(context, data);
+      }),
     );
   }
 
@@ -232,7 +236,22 @@ class ServiceDetailPage extends StatelessWidget {
 
   // ───────────────── ACTION BUTTONS ─────────────────
 
-  Widget _actionButtons(BuildContext context) {
+  Widget _actionButtons(BuildContext context, Map<String, dynamic> data) {
+    final serviceType = data['service_type']?.toString() ?? '';
+
+    // 🔹 Dynamic Label
+    final actionLabel = serviceType == 'collection' ? 'COLLECTED' : 'DELIVERED';
+
+    final state = data['state']?.toString() ?? '';
+
+    // 🔹 Allowed States
+    final canDeliver = [
+      'schedule',
+      'picked_up',
+      'in_transit',
+      'out_for_delivery',
+    ].contains(state);
+
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -271,32 +290,34 @@ class ServiceDetailPage extends StatelessWidget {
 
             const SizedBox(width: 12),
 
-            /// ✅ DELIVERED
+            /// ✅ DELIVER / COLLECT
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Colors.green,
+                  backgroundColor: canDeliver ? Colors.green : Colors.grey,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {
-                  Get.snackbar(
-                    'Success',
-                    'Service marked as delivered successfully',
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
-                    margin: const EdgeInsets.all(16),
-                    borderRadius: 12,
-                    icon: const Icon(Icons.check_circle, color: Colors.white),
-                  );
-                  Get.to(() => DeliveryConfirmationPage(serviceId: serviceId));
-                },
-                child: const Text(
-                  'DELIVERED',
-                  style: TextStyle(
+                onPressed:
+                    canDeliver
+                        ? () {
+                          Get.to(
+                            () =>
+                                DeliveryConfirmationPage(serviceId: serviceId),
+                          );
+                        }
+                        : () {
+                          Get.snackbar(
+                            'Not Allowed',
+                            'Service must be scheduled or in progress',
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                        },
+                child: Text(
+                  actionLabel, // 🔹 dynamic text
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),

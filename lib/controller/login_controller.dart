@@ -39,6 +39,12 @@ class LoginController extends GetxController {
 
       await SessionStorage.saveToken(data['token']);
       await SessionStorage.saveUserId(data['user_id']);
+      await SessionStorage.saveProfile(
+        name: data['name'],
+        email: data['email'],
+        company: data['company_name'],
+        timezone: data['time_zone'],
+      );
 
       Get.offAllNamed('/dashboard');
     } catch (e) {
