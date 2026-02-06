@@ -1,5 +1,6 @@
 import 'package:elogix_nimble/controller/service_detail_controller.dart';
 import 'package:elogix_nimble/screens/delivery_confirmation_page.dart';
+import 'package:elogix_nimble/service/delivery_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -387,7 +388,7 @@ class ServiceDetailPage extends StatelessWidget {
           TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
+            onPressed: () async {
               if (selectedReason.value.isEmpty) {
                 Get.snackbar(
                   'Error',
@@ -397,21 +398,33 @@ class ServiceDetailPage extends StatelessWidget {
                 return;
               }
 
-              Get.back();
+              try {
+                print('FAILED CLICKED');
+                print('SELECTED LABEL: ${selectedReason.value}');
 
-              // 🚀 API call will go here
-              // controller.markFailed(serviceId, selectedReason.value);
+                final mappedReason = _mapReason(selectedReason.value);
+                print('MAPPED REASON: $mappedReason');
 
-              Get.snackbar(
-                'Failed',
-                'Service marked as failed',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.red,
-                colorText: Colors.white,
-                margin: const EdgeInsets.all(16),
-                borderRadius: 12,
-                icon: const Icon(Icons.error, color: Colors.white),
-              );
+                Get.back(); // close dialog
+
+                await DeliveryService().markFailed(
+                  serviceId: serviceId,
+                  reason: mappedReason,
+                );
+
+                Get.offAllNamed('/dashboard');
+
+                Get.snackbar(
+                  'Failed',
+                  'Service marked as failed',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+              } catch (e) {
+                print('FAILED ERROR: $e');
+                Get.snackbar('Error', e.toString());
+              }
             },
             child: const Text(
               'Submit',
@@ -434,6 +447,23 @@ class ServiceDetailPage extends StatelessWidget {
       default:
         return Colors.blueGrey;
     }
+  }
+
+  String _mapReason(String label) {
+    const reasonMap = {
+      'Bad Address': 'bad_address',
+      'Wrong Address': 'wrong_address',
+      'Wrong Number': 'wrong_number',
+      'Need Contact Name': 'need_contact_name',
+      'Need Department Detail': 'need_department_detail',
+      'Need Contact Number': 'need_contact_number',
+      'Area/Location Changed': 'area_location_changed',
+      'Change Of Address': 'change_of_address',
+      'Customer Requested for Call Back': 'customer_not_available',
+      'COD Amount not ready': 'cod_amount_not_ready',
+    };
+
+    return reasonMap[label] ?? 'other';
   }
 
   String _formatDate(dynamic raw) {

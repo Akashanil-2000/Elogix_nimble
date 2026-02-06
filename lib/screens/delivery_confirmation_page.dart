@@ -19,7 +19,7 @@ class DeliveryConfirmationPage extends StatefulWidget {
 class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
   final receiverCtrl = TextEditingController();
   final amountCtrl = TextEditingController();
-
+  bool isSubmitting = false;
   final ImagePicker picker = ImagePicker();
   final List<File> images = [];
 
@@ -172,58 +172,52 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
   // ───────────────── SUBMIT ─────────────────
 
   void _submit() async {
+    if (isSubmitting) return; // prevent double click
+
+    setState(() => isSubmitting = true);
+
     try {
       print('SUBMIT CLICKED');
 
       if (awbNumber == null) {
-        print('AWB MISSING');
+        setState(() => isSubmitting = false);
         return _showError('Please scan AWB number');
       }
 
       if (receiverCtrl.text.trim().isEmpty) {
-        print('RECEIVER EMPTY');
-        return _showError('Receiver name is required');
+        setState(() => isSubmitting = false);
+        return _showError('Receiver Name is required');
       }
 
       if (amountCtrl.text.trim().isEmpty) {
-        print('AMOUNT EMPTY');
+        setState(() => isSubmitting = false);
         return _showError('Amount is required');
       }
-
       if (images.isEmpty) {
-        print('NO IMAGES');
+        setState(() => isSubmitting = false);
         return _showError('Please upload at least one image');
       }
 
-      print('VALIDATION PASSED');
-
-      final base64Image = await _fileToBase64(images.first);
-      print('BASE64 LENGTH: ${base64Image.length}');
+      final attachments = await _buildAttachments();
 
       final payload = {
         "receiver_name": receiverCtrl.text.trim(),
-        "receiver_relation": "Self",
+        "awb_number": awbNumber,
         "amount_received": double.parse(amountCtrl.text),
-        "proof_of_delivery": base64Image,
-        "signature": "",
-        "filename": "pod.jpg",
-        "delivery_notes": "Delivered via app",
+        "attachments": attachments,
       };
-
-      print('PAYLOAD: $payload');
 
       await DeliveryService().confirmDelivery(
         serviceId: widget.serviceId,
         payload: payload,
       );
 
-      print('API SUCCESS');
-
-      Get.back();
+      Get.offAllNamed('/dashboard');
       Get.snackbar('Success', 'Delivery confirmed');
     } catch (e) {
-      print('SUBMIT ERROR: $e');
       _showError(e.toString());
+    } finally {
+      setState(() => isSubmitting = false);
     }
   }
 
@@ -390,14 +384,25 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            onPressed: _submit,
-            child: const Text(
-              'SUBMIT',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+            onPressed: isSubmitting ? null : _submit,
+
+            child:
+                isSubmitting
+                    ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                    : const Text(
+                      'SUBMIT',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
           ),
         ),
       ),
@@ -433,8 +438,28 @@ class _DeliveryConfirmationPageState extends State<DeliveryConfirmationPage> {
     );
   }
 
-  Future<String> _fileToBase64(File file) async {
-    final bytes = await file.readAsBytes();
-    return base64Encode(bytes);
+  Future<List<Map<String, dynamic>>> _buildAttachments() async {
+    List<Map<String, dynamic>> files = [];
+
+    for (var img in images) {
+      final bytes = await img.readAsBytes();
+      final base64 = base64Encode(bytes);
+
+      files.add({
+        "name": img.path.split('/').last,
+        "datas": base64,
+        "description": "pod",
+        "mimetype": "image/jpeg",
+      });
+    }
+
+    return files;
+  }
+
+  @override
+  void dispose() {
+    receiverCtrl.dispose();
+    amountCtrl.dispose();
+    super.dispose();
   }
 }

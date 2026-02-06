@@ -186,11 +186,25 @@ class ServiceListPage extends StatelessWidget {
   }
 
   Color _stateColor(String state) {
-    switch (state) {
+    switch (state.toLowerCase()) {
       case 'schedule':
         return Colors.green;
+
+      case 'picked_up':
+      case 'in_transit':
+      case 'out_for_delivery':
+        return Colors.orange;
+
+      case 'delivered':
+      case 'collected':
+        return Colors.blue;
+
+      case 'failed':
+        return Colors.red;
+
       case 'draft':
         return Colors.grey;
+
       default:
         return Colors.blueGrey;
     }

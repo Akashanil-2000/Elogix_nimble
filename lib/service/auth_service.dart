@@ -24,14 +24,17 @@ class AuthService {
       final decoded = jsonDecode(resp.body);
 
       if (resp.statusCode != 200 || decoded['status'] != 'success') {
-        // 👇 clean backend message
         throw decoded['message'] ?? 'Invalid email or password';
       }
 
       return decoded['data'];
+    } on http.ClientException {
+      throw 'No internet connection';
+    } on FormatException {
+      throw 'Server error. Please try again.';
     } catch (e) {
-      // 👇 network / parsing error
-      throw 'Unable to connect. Please check your internet.';
+      // backend message
+      rethrow;
     }
   }
 }

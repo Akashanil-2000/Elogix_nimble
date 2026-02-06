@@ -52,13 +52,16 @@ class LoginController extends GetxController {
         'Login Failed',
         e.toString(),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFFD32F2F), // red
+        backgroundColor: const Color(0xFFD32F2F),
         colorText: Colors.white,
         margin: const EdgeInsets.all(16),
         borderRadius: 10,
         icon: const Icon(Icons.error_outline, color: Colors.white),
         duration: const Duration(seconds: 2),
       );
+    } finally {
+      // 🔥 IMPORTANT
+      isLoading.value = false;
     }
   }
 }
