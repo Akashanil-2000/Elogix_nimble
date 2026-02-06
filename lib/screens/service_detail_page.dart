@@ -36,24 +36,28 @@ class ServiceDetailPage extends StatelessWidget {
         }
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+
           children: [
             _headerCard(data),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             _section(
               title: 'Schedule',
+
+              icon: Icons.calendar_today,
               children: [
                 _infoRow('Date', _formatDate(data['date'])),
                 _infoRow('Scheduled Date', _formatDate(data['scheduled_date'])),
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             _section(
               title: 'From',
+              icon: Icons.upload_rounded,
               children: [
                 _infoRow('Contact', data['from_contact_name']),
                 _infoRow('Company', data['from_company_name']),
@@ -70,10 +74,11 @@ class ServiceDetailPage extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             _section(
               title: 'To',
+              icon: Icons.download_rounded,
               children: [
                 _infoRow('Contact', data['to_contact_name']),
                 _infoRow('Company', data['to_company_name']),
@@ -135,7 +140,8 @@ class ServiceDetailPage extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: stateColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: stateColor.withOpacity(0.3)),
                 ),
                 child: Text(
                   data['state'].toString().toUpperCase(),
@@ -149,7 +155,7 @@ class ServiceDetailPage extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
           Row(
             children: [
@@ -181,11 +187,16 @@ class ServiceDetailPage extends StatelessWidget {
 
   // ───────────────── SECTION CARD ─────────────────
 
-  Widget _section({required String title, required List<Widget> children}) {
+  Widget _section({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.grey.shade50,
+
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -198,11 +209,22 @@ class ServiceDetailPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              Icon(icon, size: 18, color: Colors.green),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 6),
+          const Divider(height: 14, thickness: 0.5),
           ...children,
         ],
       ),
@@ -305,8 +327,14 @@ class ServiceDetailPage extends StatelessWidget {
                     canDeliver
                         ? () {
                           Get.to(
-                            () =>
-                                DeliveryConfirmationPage(serviceId: serviceId),
+                            () => DeliveryConfirmationPage(
+                              serviceId: serviceId,
+                              codAmount: data['cod_amount'] ?? 0.0,
+                              wayBillNumber:
+                                  data['way_bill_id'] != false
+                                      ? data['way_bill_id'][1]
+                                      : null,
+                            ),
                           );
                         }
                         : () {
